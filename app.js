@@ -1,126 +1,581 @@
-const $ = (id) => document.getElementById(id);
+const $ = id =>
+  document.getElementById(id);
 
-const ORDS_DIRECT = $('endpoint');
+
+/* ============================================================
+   UTILIDADES
+============================================================ */
+
+function alertar(titulo, mensaje) {
+  alert(
+    titulo +
+    "\n\n" +
+    mensaje
+  );
+}
+
 
 function hex16(buffer) {
-  return [...new Uint8Array(buffer.slice(0, 16))]
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('').toUpperCase();
+
+  return [
+    ...new Uint8Array(
+      buffer.slice(0, 16)
+    )
+  ]
+    .map(
+      b =>
+        b
+          .toString(16)
+          .padStart(2, "0")
+    )
+    .join("")
+    .toUpperCase();
 }
 
-function showAlert(title, data) {
-  alert(title + '\n\n' + data);
-}
 
-async function fileInfo(file) {
-  const buffer = await file.arrayBuffer();
+async function obtenerInfo(file) {
+
+  const buffer =
+    await file.arrayBuffer();
+
+
+  const texto =
+    "Nombre: " + file.name +
+    "\nMIME: " + (file.type || "VACÍO") +
+    "\nFile.size: " + file.size +
+    "\nArrayBuffer: " +
+    buffer.byteLength +
+    " bytes" +
+    "\nPrimeros 16 bytes HEX: " +
+    hex16(buffer);
+
+
   return {
     buffer,
-    text:
-      `Nombre: ${file.name}\n` +
-      `MIME: ${file.type || '(vacío)'}\n` +
-      `File.size: ${file.size}\n` +
-      `ArrayBuffer: ${buffer.byteLength} bytes\n` +
-      `Primeros 16 bytes HEX: ${hex16(buffer)}`
+    texto
   };
 }
 
-// Tabs
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
-    btn.classList.add('active');
-    $(btn.dataset.tab).classList.add('active');
+
+
+/* ============================================================
+   TABS
+============================================================ */
+
+document
+  .querySelectorAll(".tab")
+  .forEach(btn => {
+
+    btn.addEventListener(
+      "click",
+      () => {
+
+        document
+          .querySelectorAll(".tab")
+          .forEach(
+            x =>
+              x.classList.remove("active")
+          );
+
+
+        document
+          .querySelectorAll(".panel")
+          .forEach(
+            x =>
+              x.classList.remove("active")
+          );
+
+
+        btn.classList.add(
+          "active"
+        );
+
+
+        $(
+          btn.dataset.tab
+        ).classList.add(
+          "active"
+        );
+
+      }
+    );
+
   });
-});
 
-// PRUEBA 1: no hace ninguna petición
-$('localFile').addEventListener('change', async () => {
-  const file = $('localFile').files?.[0];
-  if (!file) {
-    $('localResult').textContent = 'INPUT VACÍO';
-    showAlert('INPUT VACÍO', 'No existe archivo seleccionado.');
-    return;
-  }
 
-  try {
-    const info = await fileInfo(file);
-    $('localResult').textContent = info.text;
-    console.log('PRUEBA LOCAL:', info.text);
-    showAlert('ARCHIVO LLEGÓ AL COMPONENTE', info.text);
-  } catch (e) {
-    $('localResult').textContent = `ERROR leyendo archivo: ${e.name} - ${e.message}`;
-    showAlert('ERROR LEYENDO ARCHIVO', `${e.name}\n${e.message}`);
-  }
-});
 
-function buildUrl(filename) {
-  const mode = $('mode').value;
-  const base = mode === 'proxy' ? '/proxy-upload' : ORDS_DIRECT.value.trim();
-  return base + '?filename=' + encodeURIComponent(filename);
+/* ============================================================
+   PRUEBA 1
+   SOLO INPUT DEL IPHONE
+   NO HACE HTTP
+============================================================ */
+
+$("localFile")
+  .addEventListener(
+    "change",
+    async () => {
+
+      const file =
+        $("localFile").files?.[0];
+
+
+      if (!file) {
+
+        $("localResult")
+          .textContent =
+          "INPUT VACÍO";
+
+
+        alertar(
+          "INPUT VACÍO",
+          "No existe archivo seleccionado."
+        );
+
+        return;
+      }
+
+
+      try {
+
+        const info =
+          await obtenerInfo(file);
+
+
+        $("localResult")
+          .textContent =
+          info.texto;
+
+
+        console.log(
+          "ARCHIVO LOCAL:",
+          info.texto
+        );
+
+
+        alertar(
+          "ARCHIVO LLEGÓ AL COMPONENTE",
+          info.texto
+        );
+
+      }
+      catch (e) {
+
+        const msg =
+          e.name +
+          "\n" +
+          e.message;
+
+
+        $("localResult")
+          .textContent =
+          msg;
+
+
+        alertar(
+          "ERROR LEYENDO ARCHIVO",
+          msg
+        );
+      }
+
+    }
+  );
+
+
+
+/* ============================================================
+   PRUEBA 2
+   REST APEX / ORDS
+============================================================ */
+
+function urlRest(filename) {
+
+  const modo =
+    $("mode").value;
+
+
+  const base =
+    modo === "proxy"
+      ? "/proxy-upload"
+      : $("endpoint").value.trim();
+
+
+  return (
+    base +
+    "?filename=" +
+    encodeURIComponent(filename)
+  );
 }
 
-async function postBytes(bytes, filename) {
-  const url = buildUrl(filename);
-  const detail =
-    `Modo: ${$('mode').value}\n` +
-    `URL: ${url}\n` +
-    `Origin: ${location.origin}\n` +
-    `Bytes a enviar: ${bytes.byteLength}`;
 
-  showAlert('ANTES DEL POST', detail);
-  $('restResult').textContent = detail + '\n\nEnviando...';
-  console.log('ANTES DEL POST:', detail);
+
+async function enviarRest(
+  bytes,
+  filename
+) {
+
+  const url =
+    urlRest(filename);
+
+
+  const antes =
+    "URL: " + url +
+    "\nOrigin: " +
+    location.origin +
+    "\nBytes: " +
+    bytes.byteLength;
+
+
+  alertar(
+    "ANTES DEL POST A ORDS",
+    antes
+  );
+
+
+  $("restResult")
+    .textContent =
+    antes +
+    "\n\nEnviando...";
+
 
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/octet-stream',
-        'Accept': 'application/json'
-      },
-      body: bytes
-    });
 
-    const text = await response.text();
-    const result = `HTTP: ${response.status}\nContent-Type: ${response.headers.get('content-type')}\n\n${text}`;
-    $('restResult').textContent = result;
-    console.log('RESPUESTA REST:', result);
-    showAlert('RESPUESTA REST', result);
-  } catch (e) {
-    const result =
-      `FETCH FALLÓ\n` +
-      `Tipo: ${e.name}\n` +
-      `Mensaje: ${e.message}\n\n` +
-      `Origin: ${location.origin}\n` +
-      `URL: ${url}`;
+    const response =
+      await fetch(
+        url,
+        {
+          method:
+            "POST",
 
-    $('restResult').textContent = result;
-    console.error(result, e);
-    showAlert('FETCH FALLÓ', result);
+          headers: {
+            "Content-Type":
+              "application/octet-stream",
+
+            "Accept":
+              "application/json"
+          },
+
+          body:
+            bytes
+        }
+      );
+
+
+    const text =
+      await response.text();
+
+
+    const resultado =
+      "HTTP: " +
+      response.status +
+
+      "\nOK: " +
+      response.ok +
+
+      "\nContent-Type: " +
+      (
+        response.headers.get(
+          "content-type"
+        ) || "VACÍO"
+      ) +
+
+      "\n\n" +
+      text;
+
+
+    $("restResult")
+      .textContent =
+      resultado;
+
+
+    alertar(
+      "RESPUESTA ORDS",
+      resultado
+    );
+
+  }
+  catch (e) {
+
+    const resultado =
+      "FETCH FALLÓ" +
+
+      "\nTipo: " +
+      e.name +
+
+      "\nMensaje: " +
+      e.message +
+
+      "\nURL: " +
+      url;
+
+
+    $("restResult")
+      .textContent =
+      resultado;
+
+
+    alertar(
+      "FETCH ORDS FALLÓ",
+      resultado
+    );
   }
 }
 
-// PRUEBA 2A: archivo real
-$('sendFile').addEventListener('click', async () => {
-  const file = $('restFile').files?.[0];
-  if (!file) {
-    showAlert('SIN ARCHIVO', 'Selecciona un archivo primero.');
-    return;
-  }
 
-  try {
-    const info = await fileInfo(file);
-    showAlert('ARCHIVO ANTES DEL POST', info.text);
-    await postBytes(info.buffer, file.name);
-  } catch (e) {
-    showAlert('ERROR LEYENDO ARCHIVO', `${e.name}\n${e.message}`);
-  }
-});
 
-// PRUEBA 2B: 4 bytes, sin archivo
-$('send4').addEventListener('click', async () => {
-  const bytes = new Uint8Array([1, 2, 3, 4]);
-  await postBytes(bytes, 'test.jpg');
-});
+$("sendFile")
+  .addEventListener(
+    "click",
+    async () => {
+
+      const file =
+        $("restFile").files?.[0];
+
+
+      if (!file) {
+
+        alertar(
+          "SIN ARCHIVO",
+          "Selecciona un archivo."
+        );
+
+        return;
+      }
+
+
+      try {
+
+        const info =
+          await obtenerInfo(file);
+
+
+        alertar(
+          "ARCHIVO ANTES DEL POST",
+          info.texto
+        );
+
+
+        await enviarRest(
+          info.buffer,
+          file.name
+        );
+
+      }
+      catch (e) {
+
+        alertar(
+          "ERROR LEYENDO ARCHIVO",
+          e.name +
+          "\n" +
+          e.message
+        );
+      }
+
+    }
+  );
+
+
+
+$("send4")
+  .addEventListener(
+    "click",
+    async () => {
+
+      const bytes =
+        new Uint8Array(
+          [1, 2, 3, 4]
+        );
+
+
+      await enviarRest(
+        bytes,
+        "test.jpg"
+      );
+
+    }
+  );
+
+
+
+/* ============================================================
+   PRUEBA 3
+   DIRECTO CONTRA OCI
+   NO PASA POR APEX
+   NO PASA POR ORDS
+============================================================ */
+
+$("sendOci")
+  .addEventListener(
+    "click",
+    async () => {
+
+      const file =
+        $("ociFile").files?.[0];
+
+
+      let base =
+        $("ociEndpoint")
+          .value
+          .trim();
+
+
+      if (!base) {
+
+        alertar(
+          "FALTA URL OCI",
+          "Pega la URL base OCI que termina en /o/."
+        );
+
+        return;
+      }
+
+
+      if (!file) {
+
+        alertar(
+          "SIN ARCHIVO",
+          "Selecciona un archivo."
+        );
+
+        return;
+      }
+
+
+      try {
+
+        const info =
+          await obtenerInfo(file);
+
+
+        /*
+         * Garantizamos que la URL
+         * termine solamente en /
+         */
+        base =
+          base.replace(
+            /\/+$/,
+            "/"
+          );
+
+
+        const url =
+          base +
+          encodeURIComponent(
+            file.name
+          );
+
+
+        alertar(
+          "ANTES DEL PUT DIRECTO A OCI",
+
+          info.texto +
+
+          "\n\nMétodo: PUT" +
+
+          "\nURL final: " +
+          url
+        );
+
+
+        $("ociResult")
+          .textContent =
+
+          "Enviando " +
+          info.buffer.byteLength +
+          " bytes directamente a OCI...";
+
+
+        /*
+         * IMPORTANTE:
+         *
+         * NO APEX.
+         * NO ORDS.
+         * NO REST nuestro.
+         *
+         * Navegador → OCI directamente.
+         */
+        const response =
+          await fetch(
+            url,
+            {
+              method:
+                "PUT",
+
+              headers: {
+                "Content-Type":
+                  file.type ||
+                  "application/octet-stream"
+              },
+
+              body:
+                info.buffer
+            }
+          );
+
+
+        const text =
+          await response.text();
+
+
+        const resultado =
+          "HTTP: " +
+          response.status +
+
+          "\nOK: " +
+          response.ok +
+
+          "\nContent-Type respuesta: " +
+          (
+            response.headers.get(
+              "content-type"
+            ) || "VACÍO"
+          ) +
+
+          "\n\nBody respuesta:" +
+
+          "\n" +
+          (
+            text ||
+            "(OCI no devolvió body)"
+          );
+
+
+        $("ociResult")
+          .textContent =
+          resultado;
+
+
+        alertar(
+          "RESPUESTA OCI DIRECTA",
+          resultado
+        );
+
+      }
+      catch (e) {
+
+        const resultado =
+          "PUT DIRECTO A OCI FALLÓ" +
+
+          "\n\nTipo: " +
+          e.name +
+
+          "\nMensaje: " +
+          e.message +
+
+          "\n\nSi aparece Load failed / Failed to fetch," +
+
+          "\npuede tratarse de CORS, TLS o red.";
+
+
+        $("ociResult")
+          .textContent =
+          resultado;
+
+
+        alertar(
+          "ERROR OCI DIRECTO",
+          resultado
+        );
+      }
+
+    }
+  );

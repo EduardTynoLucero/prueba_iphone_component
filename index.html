@@ -1,56 +1,235 @@
 <!doctype html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Diagnóstico Upload iPhone</title>
-  <link rel="stylesheet" href="/styles.css" />
-</head>
-<body>
-  <main class="app">
-    <h1>Diagnóstico de Upload</h1>
-    <p class="lead">Prueba 1 valida el archivo solo en el navegador. Prueba 2 envía bytes al REST.</p>
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Diagnóstico Upload iPhone</title>
+
+  <link
+    rel="stylesheet"
+    href="/styles.css"
+  />
+</head>
+
+<body>
+
+  <main class="app">
+
+    <h1>Diagnóstico de Upload</h1>
+
+    <p class="lead">
+      Pruebas independientes para determinar dónde falla el upload.
+    </p>
+
+
+    <!-- TABS -->
     <nav class="tabs">
-      <button class="tab active" data-tab="local">1. Archivo local</button>
-      <button class="tab" data-tab="rest">2. Probar REST</button>
+
+      <button
+        class="tab active"
+        data-tab="local"
+      >
+        1. Archivo local
+      </button>
+
+      <button
+        class="tab"
+        data-tab="rest"
+      >
+        2. REST APEX
+      </button>
+
+      <button
+        class="tab"
+        data-tab="oci"
+      >
+        3. OCI directo
+      </button>
+
     </nav>
 
-    <section id="local" class="panel active">
-      <h2>Prueba 1: componente local</h2>
-      <p>No hace ninguna petición HTTP.</p>
-      <input id="localFile" type="file" accept="image/*,.pdf" />
-      <pre id="localResult">Esperando archivo...</pre>
+
+    <!-- ====================================================== -->
+    <!-- PRUEBA 1 -->
+    <!-- ====================================================== -->
+
+    <section
+      id="local"
+      class="panel active"
+    >
+
+      <h2>
+        Prueba 1: Archivo local
+      </h2>
+
+      <p>
+        No realiza ninguna petición.
+        Solo valida que el iPhone entregue correctamente
+        el archivo al navegador.
+      </p>
+
+      <input
+        id="localFile"
+        type="file"
+        accept="image/*,.pdf"
+      />
+
+      <pre id="localResult">
+Esperando archivo...
+      </pre>
+
     </section>
 
-    <section id="rest" class="panel">
-      <h2>Prueba 2: endpoint REST</h2>
-      <p>Selecciona un archivo y envíalo como body binario, sin FormData y sin multipart.</p>
+
+    <!-- ====================================================== -->
+    <!-- PRUEBA 2 -->
+    <!-- ====================================================== -->
+
+    <section
+      id="rest"
+      class="panel"
+    >
+
+      <h2>
+        Prueba 2: REST APEX / ORDS
+      </h2>
+
+      <p>
+        Envía el archivo al REST que creaste en Oracle.
+      </p>
+
 
       <label class="field">
-        Endpoint
-        <input id="endpoint" type="text" value="https://dbylfn34rhv0ebz-falcodev.adb.us-ashburn-1.oraclecloudapps.com/ords/salescoaching/services/prequalified-files/upload" />
+
+        Endpoint REST
+
+        <input
+          id="endpoint"
+          type="text"
+          value="https://dbylfn34rhv0ebz-falcodev.adb.us-ashburn-1.oraclecloudapps.com/ords/salescoaching/services/prequalified-files/upload"
+        />
+
       </label>
 
+
       <label class="field">
+
         Modo
+
         <select id="mode">
-          <option value="direct">Directo navegador → ORDS</option>
-          <option value="proxy">Vía proxy local de Vite</option>
+
+          <option value="direct">
+            Directo navegador → ORDS
+          </option>
+
+          <option value="proxy">
+            Vía proxy Vite
+          </option>
+
         </select>
+
       </label>
 
-      <input id="restFile" type="file" accept="image/*,.pdf" />
+
+      <input
+        id="restFile"
+        type="file"
+        accept="image/*,.pdf"
+      />
+
 
       <div class="actions">
-        <button id="sendFile">Enviar archivo</button>
-        <button id="send4" class="secondary">Enviar solo 4 bytes</button>
+
+        <button id="sendFile">
+          Enviar archivo
+        </button>
+
+        <button
+          id="send4"
+          class="secondary"
+        >
+          Enviar solo 4 bytes
+        </button>
+
       </div>
 
-      <pre id="restResult">Esperando prueba...</pre>
+
+      <pre id="restResult">
+Esperando prueba...
+      </pre>
+
     </section>
+
+
+    <!-- ====================================================== -->
+    <!-- PRUEBA 3 -->
+    <!-- ====================================================== -->
+
+    <section
+      id="oci"
+      class="panel"
+    >
+
+      <h2>
+        Prueba 3: OCI directo
+      </h2>
+
+      <p>
+        Esta prueba NO usa APEX REST ni ORDS.
+        El navegador hace directamente un PUT al
+        Object Storage de OCI.
+      </p>
+
+
+      <label class="field">
+
+        URL base OCI
+
+        <input
+          id="ociEndpoint"
+          type="text"
+          placeholder="https://objectstorage.../p/.../n/.../b/.../o/"
+        />
+
+      </label>
+
+
+      <input
+        id="ociFile"
+        type="file"
+        accept="image/*,.pdf"
+      />
+
+
+      <div class="actions">
+
+        <button id="sendOci">
+          Enviar directamente a OCI
+        </button>
+
+      </div>
+
+
+      <pre id="ociResult">
+Esperando prueba...
+      </pre>
+
+    </section>
+
   </main>
 
-  <script type="module" src="/app.js"></script>
+
+  <script
+    type="module"
+    src="/app.js"
+  ></script>
+
 </body>
+
 </html>
