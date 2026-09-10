@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagnóstico Upload iPhone</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="app">
+    <h1>Diagnóstico de Upload</h1>
+    <p class="lead">Prueba 1 valida el archivo solo en el navegador. Prueba 2 envía bytes al REST.</p>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="local">1. Archivo local</button>
+      <button class="tab" data-tab="rest">2. Probar REST</button>
+    </nav>
+
+    <section id="local" class="panel active">
+      <h2>Prueba 1: componente local</h2>
+      <p>No hace ninguna petición HTTP.</p>
+      <input id="localFile" type="file" accept="image/*,.pdf" />
+      <pre id="localResult">Esperando archivo...</pre>
+    </section>
+
+    <section id="rest" class="panel">
+      <h2>Prueba 2: endpoint REST</h2>
+      <p>Selecciona un archivo y envíalo como body binario, sin FormData y sin multipart.</p>
+
+      <label class="field">
+        Endpoint
+        <input id="endpoint" type="text" value="https://dbylfn34rhv0ebz-falcodev.adb.us-ashburn-1.oraclecloudapps.com/ords/salescoaching/services/prequalified-files/upload" />
+      </label>
+
+      <label class="field">
+        Modo
+        <select id="mode">
+          <option value="direct">Directo navegador → ORDS</option>
+          <option value="proxy">Vía proxy local de Vite</option>
+        </select>
+      </label>
+
+      <input id="restFile" type="file" accept="image/*,.pdf" />
+
+      <div class="actions">
+        <button id="sendFile">Enviar archivo</button>
+        <button id="send4" class="secondary">Enviar solo 4 bytes</button>
+      </div>
+
+      <pre id="restResult">Esperando prueba...</pre>
+    </section>
+  </main>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
